@@ -83,7 +83,7 @@ if ( !empty($pluginMeta['sections']) ) {
 <?php 
 	} else {
 		printf(
-			'"%s" is not a valid plugin archive!',
+			'"%s" is not a valid plugin package!',
 			htmlentities($_FILES['package']['name'])
 		);
 	}	
