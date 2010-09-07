@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>Analyse Plugin Package</title>
+	<title>Extract Plugin Meta</title>
 	<link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -17,6 +17,7 @@ if ( !empty($_FILES['package']['tmp_name']) ){
 	$pluginMeta = getPluginPackageMeta($_FILES['package']['tmp_name']);
 	unlink($_FILES['package']['tmp_name']);
 	
+	if ( !empty($pluginMeta) ) {
 ?>
 <div id="tabs">
 <ul class="tab-buttons">
@@ -80,6 +81,12 @@ if ( !empty($pluginMeta['sections']) ) {
 </script>
 
 <?php 
+	} else {
+		printf(
+			'"%s" is not a valid plugin archive!',
+			htmlentities($_FILES['package']['name'])
+		);
+	}	
 }
 ?>
 
