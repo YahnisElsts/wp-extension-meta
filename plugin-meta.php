@@ -260,7 +260,7 @@ function getPluginPackageMeta($packageInfo){
 	}
 	
 	if ( !empty($packageInfo['pluginFile']) ){
-		$meta['slug'] = strtolower(basename($packageInfo['pluginFile'], '.php'));
+		$meta['slug'] = strtolower(basename(dirname($packageInfo['pluginFile'])));
 	}
 		
 	return $meta;
