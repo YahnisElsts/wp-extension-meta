@@ -32,7 +32,7 @@ if ( !empty($_FILES['package']['tmp_name']) ){
 </div>
 
 <div id="tabs-2" class="panel">
-	<textarea><?php echo json_encode($pluginMeta); ?></textarea>
+	<textarea><?php echo htmlentities(json_encode($pluginMeta)); ?></textarea>
 </div>
 
 <div id="tabs-3" class="panel">
@@ -60,7 +60,7 @@ if ( !empty($pluginMeta['sections']) ) {
 		printf(
 			"<h2>%s</h2><textarea>%s</textarea>", 
 			ucwords(str_replace('_', ' ', $sectionHeader)),
-			$sectionContent
+			htmlentities($sectionContent)
 		);
 	}
 } else {
