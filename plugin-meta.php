@@ -355,7 +355,7 @@ function getPluginHeader( $file_data ) {
 		'_sitewide' => 'Site Wide Only',
 	);
 
-	$plugin_data = get_file_data( $file_data, $default_headers );
+	$plugin_data = getPluginFileData( $file_data, $default_headers );
 
 	// Site Wide Only is the old header for Network
 	if ( empty( $plugin_data['Network'] ) && ! empty( $plugin_data['_sitewide'] ) ) {
@@ -388,8 +388,9 @@ function getPluginHeader( $file_data ) {
  *
  * @param string $file_data File contents. Can be safely truncated to 8kiB as that's all WP itself scans. 
  * @param array $all_headers The list of headers to search for in the file.
+ * @return array
  */
-function get_file_data( $file_data, $all_headers ) {
+function getPluginFileData( $file_data, $all_headers ) {
 	foreach ( $all_headers as $field => $regex ) {
 		preg_match( '/' . preg_quote( $regex, '/' ) . ':(.*)$/mi', $file_data, ${$field});
 		if ( !empty( ${$field} ) )
@@ -403,17 +404,17 @@ function get_file_data( $file_data, $all_headers ) {
 	return $file_data;
 }
 
-/**
- * Strip close comment and close php tags from file headers used by WP
- * See http://core.trac.wordpress.org/ticket/8497
- *
- * @since 2.8.0
- *
- * @param string $str
- * @return string
- */
-function _cleanup_header_comment($str) {
-	return trim(preg_replace("/\s*(?:\*\/|\?>).*/", '', $str));
+if ( !function_exists('_cleanup_header_comment') ) {
+	/**
+	 * Strip close comment and close php tags from file headers used by WP
+	 * See http://core.trac.wordpress.org/ticket/8497
+	 *
+	 * @since 2.8.0
+	 *
+	 * @param string $str
+	 * @return string
+	 */
+	function _cleanup_header_comment($str) {
+		return trim(preg_replace("/\s*(?:\*\/|\?>).*/", '', $str));
+	}
 }
-
-?>
