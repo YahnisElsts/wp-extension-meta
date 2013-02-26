@@ -2,6 +2,8 @@
 <head>
 	<title>Extract Plugin Meta</title>
 	<link rel="stylesheet" href="style.css" />
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
 </head>
 <body>
 <form method="post" enctype="multipart/form-data">
@@ -72,8 +74,6 @@ if ( !empty($pluginMeta['sections']) ) {
 </div>
 </div>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
 <script type="text/javascript">
 	jQuery(function(){
 		$('#tabs').tabs();
