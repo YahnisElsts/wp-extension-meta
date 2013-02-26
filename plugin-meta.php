@@ -1,6 +1,8 @@
 <?php
 
-include 'markdown.php'; //Used to convert readme.txt contents to HTML. 
+if ( !function_exists('Markdown') ) {
+	include 'markdown.php'; //Used to convert readme.txt contents to HTML.
+}
 
 /**
  * Extract plugin headers and readme.txt data from a plugin's ZIP archive.
