@@ -4,21 +4,23 @@ if ( !function_exists('Markdown') ) {
 	include 'markdown.php'; //Used to convert readme.txt contents to HTML.
 }
 
-class WshPluginPackageParser {
+class WshWordPressPackageParser {
 	/**
-	 * Extract plugin headers and readme.txt data from a plugin's ZIP archive.
+	 * Extract headers and readme.txt data from a ZIP archive that contains a plugin or theme.
 	 *
 	 * Returns an associative array with these keys:
-	 * 	'headers' - An array of plugin headers. See get_plugin_data() for details.
+	 *  'type'   - Detected package type. This can be either "plugin" or "theme".
+	 * 	'header' - An array of plugin or theme headers. See get_plugin_data() or WP_Theme for details.
 	 *  'readme' - An array of metadata extracted from readme.txt. @see self::parseReadme()
 	 * 	'pluginFile' - The name of the PHP file where the plugin headers were found relative to the root directory of the ZIP archive.
 	 *
 	 * The 'readme' key will only be present if the input archive contains a readme.txt file
-	 * formatted according to WordPress.org readme standards.
+	 * formatted according to WordPress.org readme standards. 'pluginFile' will only be present
+	 * if the package contains a plugin and not a theme.
 	 *
-	 * @param string $packageFilename The path to the plugin's ZIP package.
+	 * @param string $packageFilename The path to the ZIP package.
 	 * @param bool $applyMarkdown Whether to transform markup used in readme.txt to HTML. Defaults to false.
-	 * @return array Associative array containing 'headers', 'readme' and 'pluginFile'. Returns FALSE if the input file is not a valid ZIP archive or doesn't contain a WP plugin.
+	 * @return array Either an associative array or FALSE if the input file is not a valid ZIP archive or doesn't contain a WP plugin or theme.
 	 */
 	public static function parsePackage($packageFilename, $applyMarkdown = false){
 		if ( !file_exists($packageFilename) || !is_readable($packageFilename) ){
@@ -31,50 +33,57 @@ class WshPluginPackageParser {
 			return false;
 		}
 
-		//Find and parse the plugin file and readme.txt
+		//Find and parse the plugin or theme file and (optionally) readme.txt.
 		$header = null;
 		$readme = null;
 		$pluginFile = null;
+		$type = null;
 
 		for ( $fileIndex = 0; ($fileIndex < $zip->numFiles) && (empty($readme) || empty($header)); $fileIndex++ ){
 			$info = $zip->statIndex($fileIndex);
+
 			//Normalize filename: convert backslashes to slashes, remove leading slashes.
 			$fileName = trim(str_replace('\\', '/', $info['name']), '/');
-			$extension = strtolower(end(explode('.', $fileName)));
+			$fileName = ltrim($fileName, '/');
 
-			//readme.txt?
+			$extension = strtolower(end(explode('.', $fileName)));
+			$depth = substr_count($fileName, '/');
+
+			//Skip empty files, directories and everything that's more than 1 sub-directory deep.
+			if ( ($depth > 1) || ($info['size'] == 0) ) {
+				continue;
+			}
+
+			//readme.txt (for plugins)?
 			if ( empty($readme) && (strtolower(basename($fileName)) == 'readme.txt') ){
 				//Try to parse the readme.
 				$readme = self::parseReadme($zip->getFromIndex($fileIndex), $applyMarkdown);
 			}
 
-			if ( empty($header) ){
-				//Skip directories and empty files.
-				if ( $info['size'] == 0 ) {
-					continue;
+			//Theme stylesheet?
+			if ( empty($header) && (strtolower(basename($fileName)) == 'style.css') ) {
+				$fileContents = substr($zip->getFromIndex($fileIndex), 0, 8*1024);
+				$header = self::getThemeHeaders($fileContents);
+				if ( !empty($header) ){
+					$type = 'theme';
 				}
-				//We're only interested in PHP files
-				if ( $extension !== 'php' ){
-					continue;
-				}
-				//WordPress only looks for plugin files in the top or second level
-				//of the directory tree, so we do the same.
-				if ( substr_count($fileName, '/') > 1 ){
-					continue;
-				}
-				//Try to read the header. WP only scans the first 8kiB, so we do the same.
+			}
+
+			//Main plugin file?
+			if ( empty($header) && ($extension === 'php') ){
 				$fileContents = substr($zip->getFromIndex($fileIndex), 0, 8*1024);
 				$header = self::getPluginHeaders($fileContents);
 				if ( !empty($header) ){
 					$pluginFile = $fileName;
+					$type = 'plugin';
 				}
 			}
 		}
 
-		if ( empty($pluginFile) ){
+		if ( empty($type) ){
 			return false;
 		} else {
-			return compact('header', 'readme', 'pluginFile');
+			return compact('header', 'readme', 'pluginFile', 'type');
 		}
 	}
 
@@ -302,6 +311,56 @@ class WshPluginPackageParser {
 	}
 
 	/**
+	 * Parse the theme stylesheet to retrieve its metadata headers.
+	 *
+	 * Adapted from the get_theme_data() function and the WP_Theme class in WordPress.
+	 * Returns an array that contains the following:
+	 *		'Name' - Name of the theme.
+	 *		'Description' - Theme description.
+	 *		'Author' - The author's name
+	 *		'AuthorURI' - The authors web site address.
+	 *		'Version' - The theme version number.
+	 *		'ThemeURI' - Theme web site address.
+	 *		'Template' - The slug of the parent theme. Only applies to child themes.
+	 *		'Status' - Unknown. Included for completeness.
+	 *		'Tags' - An array of tags.
+	 *		'TextDomain' - Theme's text domain for localization.
+	 *		'DomainPath' - Theme's relative directory path to .mo files.
+	 *
+	 * If the input string doesn't appear to contain a valid theme header, the function
+	 * will return NULL.
+	 *
+	 * @param string $fileContents Contents of the theme stylesheet.
+	 * @return array|null See above for description.
+	 */
+	public static function getThemeHeaders($fileContents) {
+		$themeHeaderNames = array(
+			'Name'        => 'Theme Name',
+			'ThemeURI'    => 'Theme URI',
+			'Description' => 'Description',
+			'Author'      => 'Author',
+			'AuthorURI'   => 'Author URI',
+			'Version'     => 'Version',
+			'Template'    => 'Template',
+			'Status'      => 'Status',
+			'Tags'        => 'Tags',
+			'TextDomain'  => 'Text Domain',
+			'DomainPath'  => 'Domain Path',
+			'DetailsURI'   => 'Details URI',
+		);
+		$headers = self::getFileHeaders($fileContents, $themeHeaderNames);
+
+		$headers['Tags'] = array_filter( array_map( 'trim', explode( ',', strip_tags( $headers['Tags'] ) ) ) );
+
+		//If it doesn't have a name, it's probably not a valid theme.
+		if ( empty($headers['Name']) ){
+			return null;
+		} else {
+			return $headers;
+		}
+	}
+
+	/**
 	 * Parse the file contents to retrieve its metadata.
 	 *
 	 * A slightly modified copy of get_file_data() used by WordPress.
@@ -319,8 +378,11 @@ class WshPluginPackageParser {
 	public static function getFileHeaders($fileContents, $headerMap ) {
 		$headers = array();
 
+		//Support systems that use CR as a line ending.
+		$fileContents = str_replace("\r", "\n", $fileContents);
+
 		foreach ($headerMap as $field => $prettyName) {
-			$found = preg_match('/' . preg_quote($prettyName, '/') . ':(.*)$/mi', $fileContents, $matches);
+			$found = preg_match('/^[ \t\/*#@]*' . preg_quote($prettyName, '/') . ':(.*)$/mi', $fileContents, $matches);
 			if ( ($found > 0) && !empty($matches[1]) ) {
 				//Strip comment markers and closing PHP tags.
 				$value = trim(preg_replace("/\s*(?:\*\/|\?>).*/", '', $matches[1]));
@@ -337,8 +399,10 @@ class WshPluginPackageParser {
 /**
  * Extract plugin metadata from a plugin's ZIP file and transform it into a structure
  * compatible with the custom update checker.
- * 
- * This is an utility function that scans the input file (assumed to be a ZIP archive) 
+ *
+ * Deprecated. Included for backwards-compatibility.
+ *
+ * This is an utility function that scans the input file (assumed to be a ZIP archive)
  * to find and parse the plugin's main PHP file and readme.txt file. Plugin metadata from 
  * both files is assembled into an associative array. The structure if this array is 
  * compatible with the format of the metadata file used by the custom plugin update checker 
@@ -355,7 +419,7 @@ class WshPluginPackageParser {
  */
 function getPluginPackageMeta($packageInfo){
 	if ( is_string($packageInfo) && file_exists($packageInfo) ){
-		$packageInfo = WshPluginPackageParser::parsePackage($packageInfo, true);
+		$packageInfo = WshWordPressPackageParser::parsePackage($packageInfo, true);
 	}
 	
 	$meta = array();

@@ -13,7 +13,7 @@
 <?php
 
 error_reporting(E_ALL);
-require '../plugin-meta.php';
+require dirname(__FILE__) . '/../plugin-meta.php';
 
 if ( !empty($_FILES['package']['tmp_name']) ){
 	$pluginMeta = getPluginPackageMeta($_FILES['package']['tmp_name']);
@@ -30,11 +30,11 @@ if ( !empty($_FILES['package']['tmp_name']) ){
 </ul>
 
 <div id="tabs-1" class="panel">
-	<textarea><?php print_r($pluginMeta); ?></textarea>
+	<textarea cols="70" rows="30"><?php print_r($pluginMeta); ?></textarea>
 </div>
 
 <div id="tabs-2" class="panel">
-	<textarea><?php echo htmlentities(json_encode($pluginMeta)); ?></textarea>
+	<textarea cols="70" rows="30"><?php echo htmlentities(json_encode($pluginMeta)); ?></textarea>
 </div>
 
 <div id="tabs-3" class="panel">
