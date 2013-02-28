@@ -13,10 +13,11 @@ class WshWordPressPackageParser {
 	 * 	'header' - An array of plugin or theme headers. See get_plugin_data() or WP_Theme for details.
 	 *  'readme' - An array of metadata extracted from readme.txt. @see self::parseReadme()
 	 * 	'pluginFile' - The name of the PHP file where the plugin headers were found relative to the root directory of the ZIP archive.
+	 * 	'stylesheet' - The relative path to the style.css file that contains theme headers, if any.
 	 *
 	 * The 'readme' key will only be present if the input archive contains a readme.txt file
-	 * formatted according to WordPress.org readme standards. 'pluginFile' will only be present
-	 * if the package contains a plugin and not a theme.
+	 * formatted according to WordPress.org readme standards. Similarly, 'pluginFile' and
+	 * 'stylesheet' will only be present if the archive contains a plugin or a theme, respectively.
 	 *
 	 * @param string $packageFilename The path to the ZIP package.
 	 * @param bool $applyMarkdown Whether to transform markup used in readme.txt to HTML. Defaults to false.
@@ -37,6 +38,7 @@ class WshWordPressPackageParser {
 		$header = null;
 		$readme = null;
 		$pluginFile = null;
+		$stylesheet = null;
 		$type = null;
 
 		for ( $fileIndex = 0; ($fileIndex < $zip->numFiles) && (empty($readme) || empty($header)); $fileIndex++ ){
@@ -65,6 +67,7 @@ class WshWordPressPackageParser {
 				$fileContents = substr($zip->getFromIndex($fileIndex), 0, 8*1024);
 				$header = self::getThemeHeaders($fileContents);
 				if ( !empty($header) ){
+					$stylesheet = $fileName;
 					$type = 'theme';
 				}
 			}
@@ -83,7 +86,7 @@ class WshWordPressPackageParser {
 		if ( empty($type) ){
 			return false;
 		} else {
-			return compact('header', 'readme', 'pluginFile', 'type');
+			return compact('header', 'readme', 'pluginFile', 'stylesheet', 'type');
 		}
 	}
 
