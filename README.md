@@ -8,13 +8,15 @@ A PHP library for parsing WordPress plugin and theme metadata. Point it at a ZIP
 - Parse readme.txt into a list of headers and sections,
 - Convert readme text from Markdown to HTML (optional).
 
-Basic usage *(todo: better docs)*
----------------------------------
+Basic usage
+-----------
+
+Extracting plugin metadata:
 
 ```
 require 'wp-extension-meta/extension-meta.php';
-$package = WshWordPressPackageParser::parsePackage('sample-plugin.zip');
-var_dump($package);
+$package = WshWordPressPackageParser::parsePackage('sample-plugin.zip', true);
+print_r($package);
 ```
 
 Sample output:
@@ -44,7 +46,6 @@ Array
                     [0] => whiteshadow
                 )
 
-            [donate] => 
             [tags] => Array
                 (
                     [0] => sample
@@ -71,8 +72,8 @@ Array
 
 Requirements
 ------------
-PHP 5.2.
+PHP 5.2. 
 
 Credits
 -------
-Partially based on the plugin header parsing code from the WordPress core.
+Partially based on plugin header parsing code from the WordPress core.
