@@ -13,7 +13,7 @@
 <?php
 
 error_reporting(E_ALL);
-require dirname(__FILE__) . '/../plugin-meta.php';
+require dirname(__FILE__) . '/../extension-meta.php';
 
 if ( !empty($_FILES['package']['tmp_name']) ){
 	$pluginMeta = getPluginPackageMeta($_FILES['package']['tmp_name']);
