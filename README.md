@@ -3,15 +3,15 @@ WordPress Package Parser
 
 A PHP library for parsing WordPress plugin and theme metadata. Point it at a ZIP package and it will:
 
-- Tell you whether it contains a plugin or a theme,
-- Give you the metadata from the comment header (Version, Description, Author URI, ...),
-- Parse readme.txt into a list of headers and sections,
-- Convert readme text from Markdown to HTML (optional).
+- Tell you whether it contains a plugin or a theme.
+- Give you the metadata from the comment header (Version, Description, Author URI, etc).
+- Parse readme.txt into a list of headers and sections.
+- Convert readme.txt contents from Markdown to HTML (optional).
 
 Basic usage
 -----------
 
-Extracting plugin metadata:
+Extract plugin metadata:
 
 ```
 require 'wp-extension-meta/extension-meta.php';
