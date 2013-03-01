@@ -13,7 +13,7 @@ Basic usage
 
 Extract plugin metadata:
 
-```
+```php
 require 'wp-extension-meta/extension-meta.php';
 $package = WshWordPressPackageParser::parsePackage('sample-plugin.zip', true);
 print_r($package);
