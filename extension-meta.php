@@ -48,8 +48,8 @@ class WshWordPressPackageParser {
 			$fileName = trim(str_replace('\\', '/', $info['name']), '/');
 			$fileName = ltrim($fileName, '/');
 
-			$explode = explode('.', $fileName);
-			$extension = strtolower(end($explode));
+			$parts = explode('.', $fileName);
+			$extension = strtolower(end($parts));
 			$depth = substr_count($fileName, '/');
 
 			//Skip empty files, directories and everything that's more than 1 sub-directory deep.
